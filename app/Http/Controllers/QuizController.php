@@ -8,6 +8,7 @@ use App\Models\QuestionAttempt;
 use App\Models\QuestionFlag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class QuizController extends Controller
 {
@@ -24,6 +25,11 @@ class QuizController extends Controller
         }
         if ($categoryId !== null && !Category::query()->whereKey($categoryId)->exists()) {
             $categoryId = null;
+        }
+
+        $search = trim((string) $request->query('q', ''));
+        if ($search !== '') {
+            $search = Str::limit($search, 200, '');
         }
 
         $allowedPerPage = [10, 20, 30, 50];
@@ -72,17 +78,29 @@ class QuizController extends Controller
             $questionsQuery->where('category_id', $categoryId);
         }
 
+        if ($search !== '') {
+            $pattern = '%' . addcslashes($search, '%_\\') . '%';
+            $questionsQuery->where(function ($q) use ($pattern) {
+                $q->where('prompt', 'like', $pattern)
+                    ->orWhere('keyword', 'like', $pattern)
+                    ->orWhereHas('options', function ($oq) use ($pattern) {
+                        $oq->where('text', 'like', $pattern);
+                    });
+            });
+        }
+
         $questions = $questionsQuery
             ->paginate($perPage)
             ->appends(array_filter([
                 'status' => $status,
                 'per_page' => $perPage,
                 'category_id' => $categoryId,
+                'q' => $search !== '' ? $search : null,
             ]));
 
         $categories = Category::query()->orderBy('name')->get();
 
-        return view('quiz.index', compact('questions', 'status', 'perPage', 'categories', 'categoryId'));
+        return view('quiz.index', compact('questions', 'status', 'perPage', 'categories', 'categoryId', 'search'));
     }
 
     public function show(Question $question, Request $request)

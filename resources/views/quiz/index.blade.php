@@ -13,7 +13,11 @@
         <hr class="hr" />
 
         @php
-            $quizBase = array_filter(['per_page' => $perPage, 'category_id' => $categoryId]);
+            $quizBase = array_filter([
+                'per_page' => $perPage,
+                'category_id' => $categoryId,
+                'q' => $search !== '' ? $search : null,
+            ]);
         @endphp
         <div class="row" style="align-items:center; gap:8px">
             <a class="pill" href="{{ route('quiz.index', array_merge($quizBase, ['status' => 'all'])) }}" style="{{ $status === 'all' ? 'border-color: rgba(79,140,255,.8);' : '' }}">Tất cả</a>
@@ -24,6 +28,9 @@
             <a class="pill" href="{{ route('quiz.index', array_merge($quizBase, ['status' => 'unflagged'])) }}" style="{{ $status === 'unflagged' ? 'border-color: rgba(170,178,197,.9);' : '' }}">Unflag</a>
             <form method="GET" action="{{ route('quiz.index') }}" style="margin-left:auto;">
                 <input type="hidden" name="status" value="{{ $status }}">
+                @if ($search !== '')
+                    <input type="hidden" name="q" value="{{ $search }}">
+                @endif
                 @if ($categoryId !== null)
                     <input type="hidden" name="category_id" value="{{ $categoryId }}">
                 @endif
@@ -40,7 +47,13 @@
         <form method="GET" action="{{ route('quiz.index') }}" class="row" style="align-items:center; gap:10px; flex-wrap:wrap">
             <input type="hidden" name="status" value="{{ $status }}">
             <input type="hidden" name="per_page" value="{{ $perPage }}">
-            <span class="k">Category</span>
+            <span class="k">Tìm câu hỏi</span>
+            <input class="input" type="search" name="q" value="{{ $search }}" placeholder="Nội dung câu, từ khóa, đáp án..." autocomplete="off" style="flex:1; min-width:200px; max-width:420px;">
+            <button class="btn btn-primary" type="submit">Tìm</button>
+            @if ($search !== '')
+                <a class="pill" href="{{ route('quiz.index', array_filter(['status' => $status, 'per_page' => $perPage, 'category_id' => $categoryId])) }}">Xóa tìm</a>
+            @endif
+            <span class="k" style="margin-left:8px;">Category</span>
             <select class="select" name="category_id" onchange="this.form.submit()" style="width:auto; min-width:220px;">
                 <option value="all" {{ $categoryId === null ? 'selected' : '' }}>Tất cả category</option>
                 @foreach ($categories as $cat)
@@ -87,7 +100,13 @@
                     </div>
                 </div>
             @empty
-                <div class="muted">Không có câu hỏi phù hợp với bộ lọc hiện tại.</div>
+                <div class="muted">
+                    @if ($search !== '')
+                        Không có câu hỏi khớp “{{ Str::limit($search, 80) }}”. Thử từ khóa khác hoặc <a href="{{ route('quiz.index', array_filter(['status' => $status, 'per_page' => $perPage, 'category_id' => $categoryId])) }}">xóa tìm kiếm</a>.
+                    @else
+                        Không có câu hỏi phù hợp với bộ lọc hiện tại.
+                    @endif
+                </div>
             @endforelse
         </div>
         <div style="height:10px"></div>
