@@ -97,10 +97,21 @@
     <div class="nav">
         <div class="brand">Quiz Builder</div>
         <div class="navlinks">
-            <a class="pill" href="{{ route('quiz.index') }}">Danh sách câu hỏi</a>
-            <a class="pill" href="{{ route('questions.create') }}">Tạo câu hỏi</a>
-            <a class="pill" href="{{ route('categories.create') }}">Tạo category</a>
+            @auth
+                <a class="pill" href="{{ route('quiz.index') }}">Danh sách câu hỏi</a>
+                <a class="pill" href="{{ route('questions.create') }}">Tạo câu hỏi</a>
+                <a class="pill" href="{{ route('categories.create') }}">Tạo category</a>
+            @endauth
             <button class="pill" type="button" id="themeToggle" style="cursor:pointer">Sáng/Tối</button>
+            @guest
+                <a class="pill" href="{{ route('login') }}">Đăng nhập</a>
+            @else
+                <span class="pill" style="opacity:.9;">{{ auth()->user()->name }}</span>
+                <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                    @csrf
+                    <button class="pill" type="submit" style="cursor:pointer;">Đăng xuất</button>
+                </form>
+            @endguest
         </div>
     </div>
 

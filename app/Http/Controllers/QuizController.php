@@ -14,7 +14,6 @@ class QuizController extends Controller
     public function index(Request $request)
     {
         $sessionId = $request->session()->getId();
-        $visitorId = (string) $request->attributes->get('quiz_visitor_id');
         $status = $request->query('status', 'all');
         $categoryId = $request->query('category_id');
         $categoryId = ($categoryId === null || $categoryId === '' || $categoryId === 'all')
@@ -39,8 +38,8 @@ class QuizController extends Controller
             ->with(['attempts' => function ($q) use ($sessionId) {
                 $q->where('session_id', $sessionId);
             }])
-            ->with(['flags' => function ($q) use ($visitorId) {
-                $q->where('visitor_id', $visitorId);
+            ->with(['flags' => function ($q) use ($sessionId) {
+                $q->where('session_id', $sessionId);
             }])
             ->orderByDesc('id')
         ;
@@ -58,12 +57,12 @@ class QuizController extends Controller
                 $q->where('session_id', $sessionId);
             });
         } elseif ($status === 'flagged') {
-            $questionsQuery->whereHas('flags', function ($q) use ($visitorId) {
-                $q->where('visitor_id', $visitorId);
+            $questionsQuery->whereHas('flags', function ($q) use ($sessionId) {
+                $q->where('session_id', $sessionId);
             });
         } elseif ($status === 'unflagged') {
-            $questionsQuery->whereDoesntHave('flags', function ($q) use ($visitorId) {
-                $q->where('visitor_id', $visitorId);
+            $questionsQuery->whereDoesntHave('flags', function ($q) use ($sessionId) {
+                $q->where('session_id', $sessionId);
             });
         } else {
             $status = 'all';
@@ -102,7 +101,7 @@ class QuizController extends Controller
             ->first();
 
         $isFlagged = QuestionFlag::query()
-            ->where('visitor_id', (string) $request->attributes->get('quiz_visitor_id'))
+            ->where('session_id', $request->session()->getId())
             ->where('question_id', $question->id)
             ->exists();
 
@@ -148,9 +147,9 @@ class QuizController extends Controller
 
     public function toggleFlag(Question $question, Request $request)
     {
-        $visitorId = (string) $request->attributes->get('quiz_visitor_id');
+        $sessionId = $request->session()->getId();
         $existing = QuestionFlag::query()
-            ->where('visitor_id', $visitorId)
+            ->where('session_id', $sessionId)
             ->where('question_id', $question->id)
             ->first();
 
@@ -159,7 +158,7 @@ class QuizController extends Controller
             $message = 'Da bo danh dau flag.';
         } else {
             QuestionFlag::create([
-                'visitor_id' => $visitorId,
+                'session_id' => $sessionId,
                 'question_id' => $question->id,
             ]);
             $message = 'Da danh dau flag cho cau hoi.';

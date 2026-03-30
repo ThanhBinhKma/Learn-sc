@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class QuestionFlag extends Model
 {
     protected $fillable = [
-        'visitor_id',
+        'session_id',
         'question_id',
     ];
 
