@@ -106,6 +106,15 @@ class QuestionBuilderController extends Controller
         });
     }
 
+    public function destroy(Question $question)
+    {
+        $question->delete(); // cascadeOnDelete should remove related options/attempts/flags
+
+        return redirect()
+            ->route('quiz.index')
+            ->with('status', 'Đã xóa câu hỏi.');
+    }
+
     private function validateQuestionRequest(Request $request): array
     {
         if ($request->input('category_id') === '' || $request->input('category_id') === null) {

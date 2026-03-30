@@ -17,6 +17,7 @@
                 'per_page' => $perPage,
                 'category_id' => $categoryId,
                 'q' => $search !== '' ? $search : null,
+                'keyword_filter' => $keywordFilter !== 'all' ? $keywordFilter : null,
             ]);
         @endphp
         <div class="row" style="align-items:center; gap:8px">
@@ -26,10 +27,18 @@
             <a class="pill" href="{{ route('quiz.index', array_merge($quizBase, ['status' => 'unanswered'])) }}" style="{{ $status === 'unanswered' ? 'border-color: rgba(255,255,255,.5);' : '' }}">Chưa làm</a>
             <a class="pill" href="{{ route('quiz.index', array_merge($quizBase, ['status' => 'flagged'])) }}" style="{{ $status === 'flagged' ? 'border-color: rgba(255,221,87,.95);' : '' }}">Flagged</a>
             <a class="pill" href="{{ route('quiz.index', array_merge($quizBase, ['status' => 'unflagged'])) }}" style="{{ $status === 'unflagged' ? 'border-color: rgba(170,178,197,.9);' : '' }}">Unflag</a>
+            @if ($keywordFilter === 'no')
+                <a class="pill" href="{{ route('quiz.index', array_merge($quizBase, ['status' => $status, 'keyword_filter' => 'all'])) }}" style="border-color: rgba(170,178,197,.95);">Bỏ lọc keyword</a>
+            @else
+                <a class="pill" href="{{ route('quiz.index', array_merge($quizBase, ['status' => $status, 'keyword_filter' => 'no'])) }}" style="{{ $keywordFilter === 'no' ? 'border-color: rgba(170,178,197,.95);' : '' }}">Không keyword</a>
+            @endif
             <form method="GET" action="{{ route('quiz.index') }}" style="margin-left:auto;">
                 <input type="hidden" name="status" value="{{ $status }}">
                 @if ($search !== '')
                     <input type="hidden" name="q" value="{{ $search }}">
+                @endif
+                @if ($keywordFilter !== 'all')
+                    <input type="hidden" name="keyword_filter" value="{{ $keywordFilter }}">
                 @endif
                 @if ($categoryId !== null)
                     <input type="hidden" name="category_id" value="{{ $categoryId }}">
@@ -47,11 +56,14 @@
         <form method="GET" action="{{ route('quiz.index') }}" class="row" style="align-items:center; gap:10px; flex-wrap:wrap">
             <input type="hidden" name="status" value="{{ $status }}">
             <input type="hidden" name="per_page" value="{{ $perPage }}">
+            @if ($keywordFilter !== 'all')
+                <input type="hidden" name="keyword_filter" value="{{ $keywordFilter }}">
+            @endif
             <span class="k">Tìm câu hỏi</span>
             <input class="input" type="search" name="q" value="{{ $search }}" placeholder="Nội dung câu, từ khóa, đáp án..." autocomplete="off" style="flex:1; min-width:200px; max-width:420px;">
             <button class="btn btn-primary" type="submit">Tìm</button>
             @if ($search !== '')
-                <a class="pill" href="{{ route('quiz.index', array_filter(['status' => $status, 'per_page' => $perPage, 'category_id' => $categoryId])) }}">Xóa tìm</a>
+                <a class="pill" href="{{ route('quiz.index', array_filter(['status' => $status, 'per_page' => $perPage, 'category_id' => $categoryId, 'keyword_filter' => $keywordFilter !== 'all' ? $keywordFilter : null])) }}">Xóa tìm</a>
             @endif
             <span class="k" style="margin-left:8px;">Category</span>
             <select class="select" name="category_id" onchange="this.form.submit()" style="width:auto; min-width:220px;">
@@ -102,7 +114,7 @@
             @empty
                 <div class="muted">
                     @if ($search !== '')
-                        Không có câu hỏi khớp “{{ Str::limit($search, 80) }}”. Thử từ khóa khác hoặc <a href="{{ route('quiz.index', array_filter(['status' => $status, 'per_page' => $perPage, 'category_id' => $categoryId])) }}">xóa tìm kiếm</a>.
+                        Không có câu hỏi khớp “{{ \Illuminate\Support\Str::limit($search, 80) }}”. Thử từ khóa khác hoặc <a href="{{ route('quiz.index', array_filter(['status' => $status, 'per_page' => $perPage, 'category_id' => $categoryId, 'keyword_filter' => $keywordFilter !== 'all' ? $keywordFilter : null])) }}">xóa tìm kiếm</a>.
                     @else
                         Không có câu hỏi phù hợp với bộ lọc hiện tại.
                     @endif

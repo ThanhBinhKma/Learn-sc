@@ -26,12 +26,29 @@
                 </div>
             </div>
             <div class="row" style="gap:8px; flex-shrink:0">
+                @if ($prevQuestion)
+                    <a class="btn btn-ghost" href="{{ route('quiz.show', $prevQuestion) }}">← Trước</a>
+                @else
+                    <span class="btn btn-ghost" style="opacity:.5; pointer-events:none;">← Trước</span>
+                @endif
                 <a class="btn btn-ghost" href="{{ route('questions.edit', $question) }}">Sửa</a>
-                <a class="btn btn-ghost" href="{{ route('quiz.index') }}">← Danh sách</a>
+                @if ($nextQuestion)
+                    <a class="btn btn-ghost" href="{{ route('quiz.show', $nextQuestion) }}">Sau →</a>
+                @else
+                    <span class="btn btn-ghost" style="opacity:.5; pointer-events:none;">Sau →</span>
+                @endif
             </div>
         </div>
 
         <hr class="hr" />
+
+        <div class="row" style="justify-content:flex-end; gap:8px; align-items:center; margin-bottom:10px;">
+            <form method="POST" action="{{ route('questions.destroy', $question) }}" onsubmit="return confirm('Xóa câu hỏi #{{ $question->id }}?');">
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-ghost danger" type="submit">Xóa</button>
+            </form>
+        </div>
 
         <div class="question-prompt-html" style="font-size:16px">{!! \App\Models\Question::renderPromptForDisplay($question->prompt) !!}</div>
         <div style="height:12px"></div>
@@ -136,9 +153,11 @@
     </div>
 
     @if ($question->type === 'drag_drop')
+        <div id="dragMeta" data-checked="{{ $checked ? '1' : '0' }}" style="display:none"></div>
         <script>
             (function () {
-                const checked = {{ $checked ? 'true' : 'false' }};
+                const meta = document.getElementById('dragMeta');
+                const checked = meta && meta.dataset && meta.dataset.checked === '1';
                 if (checked) return;
 
                 const list = document.getElementById('dragList');

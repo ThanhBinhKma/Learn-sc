@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/questions', [QuestionBuilderController::class, 'store'])->name('questions.store');
     Route::get('/questions/{question}/edit', [QuestionBuilderController::class, 'edit'])->name('questions.edit');
     Route::put('/questions/{question}', [QuestionBuilderController::class, 'update'])->name('questions.update');
+        Route::delete('/questions/{question}', [QuestionBuilderController::class, 'destroy'])->name('questions.destroy');
 
     Route::get('/quiz', [QuizController::class, 'index'])->name('quiz.index');
     Route::get('/quiz/{question}', [QuizController::class, 'show'])->name('quiz.show');

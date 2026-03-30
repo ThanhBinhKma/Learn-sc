@@ -27,6 +27,9 @@ class QuizController extends Controller
             $categoryId = null;
         }
 
+        $keywordFilter = $request->query('keyword_filter', 'all');
+        $keywordFilter = in_array($keywordFilter, ['all', 'no'], true) ? $keywordFilter : 'all';
+
         $search = trim((string) $request->query('q', ''));
         if ($search !== '') {
             $search = Str::limit($search, 200, '');
@@ -78,6 +81,13 @@ class QuizController extends Controller
             $questionsQuery->where('category_id', $categoryId);
         }
 
+        if ($keywordFilter === 'no') {
+            $questionsQuery->where(function ($q) {
+                $q->whereNull('keyword')
+                    ->orWhereRaw("TRIM(keyword) = ''");
+            });
+        }
+
         if ($search !== '') {
             $pattern = '%' . addcslashes($search, '%_\\') . '%';
             $questionsQuery->where(function ($q) use ($pattern) {
@@ -96,11 +106,12 @@ class QuizController extends Controller
                 'per_page' => $perPage,
                 'category_id' => $categoryId,
                 'q' => $search !== '' ? $search : null,
+                'keyword_filter' => $keywordFilter !== 'all' ? $keywordFilter : null,
             ]));
 
         $categories = Category::query()->orderBy('name')->get();
 
-        return view('quiz.index', compact('questions', 'status', 'perPage', 'categories', 'categoryId', 'search'));
+        return view('quiz.index', compact('questions', 'status', 'perPage', 'categories', 'categoryId', 'search', 'keywordFilter'));
     }
 
     public function show(Question $question, Request $request)
@@ -113,6 +124,17 @@ class QuizController extends Controller
             }
         }]);
 
+        // Next/Prev theo thứ tự id giảm dần (giống hiển thị trong quiz.index).
+        $prevQuestion = Question::query()
+            ->where('id', '>', $question->id)
+            ->orderBy('id', 'asc')
+            ->first();
+
+        $nextQuestion = Question::query()
+            ->where('id', '<', $question->id)
+            ->orderBy('id', 'desc')
+            ->first();
+
         $attempt = QuestionAttempt::query()
             ->where('session_id', $request->session()->getId())
             ->where('question_id', $question->id)
@@ -123,7 +145,7 @@ class QuizController extends Controller
             ->where('question_id', $question->id)
             ->exists();
 
-        return view('quiz.show', compact('question', 'attempt', 'isFlagged'));
+        return view('quiz.show', compact('question', 'attempt', 'isFlagged', 'prevQuestion', 'nextQuestion'));
     }
 
     public function check(Question $question, Request $request)
