@@ -44,8 +44,9 @@ class Question extends Model
             return '';
         }
 
-        if (preg_match('/^\s*<(p|h[1-6]|ul|ol|blockquote|div|figure|strong|em|b|i)\b/i', $prompt)) {
-            $allowed = '<p><br><strong><em><b><i><u><ul><ol><li><h1><h2><h3><h4><blockquote><figure><figcaption>';
+        // Chỉ sanitize HTML để hiển thị; CKEditor có thể chứa ảnh dưới dạng <img ...>.
+        if (preg_match('/^\s*<(p|h[1-6]|ul|ol|blockquote|div|figure|figcaption|strong|em|b|i|img)\b/i', $prompt)) {
+            $allowed = '<p><br><strong><em><b><i><u><ul><ol><li><h1><h2><h3><h4><blockquote><figure><figcaption><img>';
 
             return strip_tags($prompt, $allowed);
         }
